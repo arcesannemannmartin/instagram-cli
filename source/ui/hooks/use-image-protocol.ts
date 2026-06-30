@@ -1,5 +1,5 @@
-import process from 'node:process';
-import {useState, useEffect} from 'react';
+import * as process from 'node:process';
+import {useState} from 'react';
 import {type ImageProtocolName} from 'ink-picture';
 import {ConfigManager} from '../../config.js';
 
@@ -9,27 +9,25 @@ const KITTY_INCOMPATIBLE_TERMS: ReadonlySet<string> = new Set([
 	'ghostty', // Ghostty declares kitty support but ignores width/height on <Image>
 ]);
 
+function resolveProtocol(): ImageProtocolName | undefined {
+	const config = ConfigManager.getInstance();
+	const savedProtocol: ImageProtocolName | undefined =
+		config.get('image.protocol');
+
+	const term = process.env['TERM_PROGRAM'] ?? '';
+	if (savedProtocol === 'kitty' && KITTY_INCOMPATIBLE_TERMS.has(term)) {
+		return 'halfBlock';
+	}
+
+	return savedProtocol;
+}
+
 export function useImageProtocol() {
-	const [protocol, setProtocol] = useState<ImageProtocolName | undefined>(
-		undefined,
-	);
-
-	useEffect(() => {
-		const config = ConfigManager.getInstance();
-		const savedProtocol = config.get('image.protocol');
-
-		// If the user explicitly configured a protocol that the current terminal
-		// can't render properly, fall back to halfBlock so width/height on
-		// <Image> are honored. Only downgrade the kitty family; leave other
-		// explicit choices alone.
-		const term = process.env['TERM_PROGRAM'] ?? '';
-		if (savedProtocol === 'kitty' && KITTY_INCOMPATIBLE_TERMS.has(term)) {
-			setProtocol('halfBlock' as ImageProtocolName);
-			return;
-		}
-
-		setProtocol(savedProtocol as ImageProtocolName | undefined);
-	}, []);
-
+	// Compute the protocol synchronously on the first render so the <Image>
+	// component receives the downgraded value immediately (no flash of the
+	// raw kitty protocol that ignores width/height on Ghostty).
+	// Setter intentionally omitted: protocol is fixed for the session.
+	// eslint-disable-next-line react/hook-use-state
+	const [protocol] = useState(resolveProtocol);
 	return protocol;
 }
