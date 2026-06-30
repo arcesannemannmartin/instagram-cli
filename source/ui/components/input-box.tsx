@@ -234,68 +234,73 @@ export default function InputBox({
 		}
 	};
 
-	// This single useInput hook handles all key presses, creating a clear priority
-	useInput((_input, key) => {
-		if (isDisabled) {
-			return;
-		}
-
-		// Ctrl+C: clear the input if it has text, otherwise exit the app
-		if (key.ctrl && _input === 'c') {
-			if (message.length > 0) {
-				setMessage('');
-				setAutocomplete(initialAutocompleteState);
-				setInputKey(previous => previous + 1);
-			} else {
-				exit();
+	// This single useInput hook handles all key presses, creating a clear priority.
+	// When isDisabled is true (selection mode in chat-view), we pass isActive: false
+	// so that chat-view's useInput receives the keystrokes (e.g. 'o' to open a reel).
+	useInput(
+		(_input, key) => {
+			if (isDisabled) {
+				return;
 			}
 
-			return;
-		}
-
-		// Priority 1: Autocomplete handling
-		if (autocomplete.isActive && autocomplete.suggestions.length > 0) {
-			if (key.upArrow) {
-				setAutocomplete(previous => ({
-					...previous,
-					selectedIndex:
-						(previous.selectedIndex - 1 + previous.suggestions.length) %
-						previous.suggestions.length,
-				}));
-				return; // Consume event
-			}
-
-			if (key.downArrow) {
-				setAutocomplete(previous => ({
-					...previous,
-					selectedIndex:
-						(previous.selectedIndex + 1) % previous.suggestions.length,
-				}));
-				return; // Consume event
-			}
-
-			if (key.escape) {
-				setAutocomplete(initialAutocompleteState);
-				return; // Consume event
-			}
-
-			if (key.tab || key.return) {
-				const selectedSuggestion =
-					autocomplete.suggestions[autocomplete.selectedIndex];
-				if (selectedSuggestion) {
-					handleAutocompleteSelection(selectedSuggestion);
+			// Ctrl+C: clear the input if it has text, otherwise exit the app
+			if (key.ctrl && _input === 'c') {
+				if (message.length > 0) {
+					setMessage('');
+					setAutocomplete(initialAutocompleteState);
+					setInputKey(previous => previous + 1);
+				} else {
+					exit();
 				}
 
-				return; // Consume event, preventing submission
+				return;
 			}
-		}
 
-		// Priority 2: Default submission on Enter
+			// Priority 1: Autocomplete handling
+			if (autocomplete.isActive && autocomplete.suggestions.length > 0) {
+				if (key.upArrow) {
+					setAutocomplete(previous => ({
+						...previous,
+						selectedIndex:
+							(previous.selectedIndex - 1 + previous.suggestions.length) %
+							previous.suggestions.length,
+					}));
+					return; // Consume event
+				}
 
-		if (key.return) {
-			handleSubmit(message);
-		}
-	});
+				if (key.downArrow) {
+					setAutocomplete(previous => ({
+						...previous,
+						selectedIndex:
+							(previous.selectedIndex + 1) % previous.suggestions.length,
+					}));
+					return; // Consume event
+				}
+
+				if (key.escape) {
+					setAutocomplete(initialAutocompleteState);
+					return; // Consume event
+				}
+
+				if (key.tab || key.return) {
+					const selectedSuggestion =
+						autocomplete.suggestions[autocomplete.selectedIndex];
+					if (selectedSuggestion) {
+						handleAutocompleteSelection(selectedSuggestion);
+					}
+
+					return; // Consume event, preventing submission
+				}
+			}
+
+			// Priority 2: Default submission on Enter
+
+			if (key.return) {
+				handleSubmit(message);
+			}
+		},
+		{isActive: !isDisabled},
+	);
 
 	// Handle paste events via Ink v7's usePaste hook.
 	// Bracketed paste mode is enabled automatically — pasted text arrives as a
@@ -369,6 +374,7 @@ export default function InputBox({
 						key={inputKey}
 						cursorOffset={cursorOffset}
 						showCursor={!isDisabled}
+						focus={!isDisabled}
 						value={message}
 						placeholder={
 							isDisabled
