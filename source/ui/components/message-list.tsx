@@ -126,6 +126,7 @@ export default function MessageList({
 								src={clipPreviewUrl}
 								alt="Reel preview"
 								protocol={imageProtocol}
+								width={90}
 							/>
 						)}
 						{clipTargetUrl && (
