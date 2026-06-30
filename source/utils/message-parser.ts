@@ -420,6 +420,23 @@ export function parseMessageItem(
 				};
 			}
 
+			// xma_clip: a shared reel/post from the new Instagram DM format.
+			// Comes with preview_url (thumbnail jpg), target_url (link to reel),
+			// header_title_text (author username) and header_icon_url (avatar).
+			if ((item.item_type as any) === 'xma_clip') {
+				const clips = (item as any).xma_clip;
+				const first =
+					Array.isArray(clips) && clips.length > 0 ? clips[0] : undefined;
+				return {
+					...baseMessage,
+					itemType: 'clip_share',
+					clipPreviewUrl: first?.preview_url,
+					clipTargetUrl: first?.target_url,
+					clipAuthorUsername: first?.header_title_text,
+					clipAuthorAvatarUrl: first?.header_icon_url,
+				};
+			}
+
 			return {
 				...baseMessage,
 				itemType: 'placeholder',

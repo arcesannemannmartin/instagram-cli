@@ -100,3 +100,47 @@ test('getBestMediaUrl picks highest quality image', t => {
 	t.is(best?.url, 'high.jpg');
 	t.is(best?.type, 'image');
 });
+
+test('parseMessageItem parses xma_clip shared reel', t => {
+	const rawMessage = {
+		item_id: 'msg_clip_1',
+		user_id: 1002,
+		timestamp: String(Date.now() * 1000),
+		item_type: 'xma_clip',
+		xma_clip: [
+			{
+				preview_url: 'https://cdn.example/preview.jpg',
+				target_url: 'https://www.instagram.com/reel/ABC123/',
+				header_title_text: 'somecreator',
+				header_icon_url: 'https://cdn.example/avatar.jpg',
+			},
+		],
+	};
+
+	const result = parseMessageItem(rawMessage as any, 'thread_1', mockContext);
+
+	t.truthy(result);
+	t.is(result?.itemType, 'clip_share');
+	const clip = result as Extract<typeof result, {itemType: 'clip_share'}>;
+	t.is(clip?.clipPreviewUrl, 'https://cdn.example/preview.jpg');
+	t.is(clip?.clipTargetUrl, 'https://www.instagram.com/reel/ABC123/');
+	t.is(clip?.clipAuthorUsername, 'somecreator');
+	t.is(clip?.clipAuthorAvatarUrl, 'https://cdn.example/avatar.jpg');
+});
+
+test('parseMessageItem handles xma_clip with empty array gracefully', t => {
+	const rawMessage = {
+		item_id: 'msg_clip_2',
+		user_id: 1002,
+		timestamp: String(Date.now() * 1000),
+		item_type: 'xma_clip',
+		xma_clip: [],
+	};
+
+	const result = parseMessageItem(rawMessage as any, 'thread_1', mockContext);
+
+	t.truthy(result);
+	t.is(result?.itemType, 'clip_share');
+	const clip = result as Extract<typeof result, {itemType: 'clip_share'}>;
+	t.is(clip?.clipTargetUrl, undefined);
+});

@@ -37,7 +37,8 @@ export type Message =
 	| MediaMessage
 	| LinkMessage
 	| PlaceholderMessage
-	| MediaShareMessage;
+	| MediaShareMessage
+	| ClipShareMessage;
 
 type BaseMessage = {
 	id: string;
@@ -76,6 +77,14 @@ export type MediaShareMessage = {
 	itemType: 'media_share';
 	mediaSharePost: Post;
 	mediaShareIndex?: number;
+} & BaseMessage;
+
+export type ClipShareMessage = {
+	itemType: 'clip_share';
+	clipPreviewUrl?: string;
+	clipTargetUrl?: string;
+	clipAuthorUsername?: string;
+	clipAuthorAvatarUrl?: string;
 } & BaseMessage;
 
 export type MessageMedia = {

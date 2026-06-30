@@ -108,6 +108,44 @@ export default function MessageList({
 				);
 			}
 
+			case 'clip_share': {
+				const {clipPreviewUrl, clipTargetUrl, clipAuthorUsername} = message;
+				const displayTarget = clipTargetUrl ?? '';
+				return (
+					<Box flexDirection="column">
+						{clipAuthorUsername && (
+							<Text dimColor>
+								[Shared reel by{' '}
+								<Text bold color="cyan">
+									@{clipAuthorUsername}
+								</Text>
+								]
+							</Text>
+						)}
+						{clipPreviewUrl ? (
+							<Box
+								borderStyle="round"
+								borderColor="cyan"
+								width={32}
+								height={17}
+								flexDirection="column"
+							>
+								<Image
+									src={clipPreviewUrl}
+									alt="Reel preview"
+									protocol={imageProtocol}
+								/>
+							</Box>
+						) : null}
+						{displayTarget && (
+							<Text color="yellow">
+								<Text bold>Open:</Text> {displayTarget}
+							</Text>
+						)}
+					</Box>
+				);
+			}
+
 			default: {
 				return <Text dimColor>{(message as any).text}</Text>;
 			}
