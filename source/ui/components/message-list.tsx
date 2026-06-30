@@ -109,7 +109,7 @@ export default function MessageList({
 			}
 
 			case 'clip_share': {
-				const {clipTargetUrl, clipAuthorUsername} = message;
+				const {clipPreviewUrl, clipTargetUrl, clipAuthorUsername} = message;
 				return (
 					<Box flexDirection="column">
 						{clipAuthorUsername && (
@@ -121,12 +121,19 @@ export default function MessageList({
 								]
 							</Text>
 						)}
+						{clipPreviewUrl && (
+							<Image
+								src={clipPreviewUrl}
+								alt="Reel preview"
+								protocol={imageProtocol}
+							/>
+						)}
 						{clipTargetUrl && (
 							<Text color="yellow">
 								<Text bold>Open:</Text> {clipTargetUrl}
 							</Text>
 						)}
-						{!clipAuthorUsername && !clipTargetUrl && (
+						{!clipAuthorUsername && !clipTargetUrl && !clipPreviewUrl && (
 							<Text dimColor>[Shared reel]</Text>
 						)}
 					</Box>

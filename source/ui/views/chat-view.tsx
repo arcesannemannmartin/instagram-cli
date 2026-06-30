@@ -1,3 +1,4 @@
+import {spawn} from 'node:child_process';
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {Box, Text, useInput, useApp, useWindowSize} from 'ink';
 import {TerminalInfoProvider} from 'ink-picture';
@@ -595,6 +596,7 @@ export default function ChatView({
 		}
 
 		if (chatState.isSelectionMode && currentView === 'chat') {
+			// eslint-disable-next-line unicorn/prefer-switch -- upstream uses if/else-if pattern; will refactor separately
 			if (input === 'j') {
 				setChatState(previous => {
 					const maxIndex = Math.max(0, previous.messages.length - 1);
@@ -618,6 +620,19 @@ export default function ChatView({
 						selectedMessageIndex: newIndex,
 					};
 				});
+			} else if (input === 'o') {
+				// Read selectedMessageIndex from current state, not from the setState callback.
+				const state = chatState;
+				const index = state.selectedMessageIndex;
+				if (index !== undefined) {
+					const message = state.messages[index];
+					if (message?.itemType === 'clip_share' && message.clipTargetUrl) {
+						spawn('xdg-open', [message.clipTargetUrl], {
+							detached: true,
+							stdio: 'ignore',
+						}).unref();
+					}
+				}
 			} else if (key.return) {
 				setChatState(previous => ({
 					...previous,
@@ -875,7 +890,7 @@ export default function ChatView({
 		}
 
 		if (chatState.isSelectionMode) {
-			return 'j/k: navigate messages, Enter: confirm, Esc: exit selection';
+			return 'j/k: navigate, o: open reel in browser, Enter: confirm, Esc: exit selection';
 		}
 
 		return 'Esc: back to threads, Ctrl+C: Clear input';
